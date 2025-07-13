@@ -1,4 +1,4 @@
-name: Deploy Pipeline
+name: Registro de imagenes - Pipeline
 
 on:
   push:

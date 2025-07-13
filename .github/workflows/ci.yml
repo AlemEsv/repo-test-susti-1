@@ -1,4 +1,4 @@
-name: CI
+name: Calidad de codigo - Pipeline
 
 on:
   push:
