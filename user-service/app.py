@@ -4,9 +4,11 @@ from repository import UserRepository
 
 app = FastAPI()
 
+
 def get_user_service():
     repo = UserRepository()
     return UserService(repo)
+
 
 @app.get("/welcome/{user_id}")
 def welcome(user_id: str, service: UserService = Depends(get_user_service)):
