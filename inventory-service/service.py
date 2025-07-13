@@ -1,5 +1,6 @@
 from interfaces import IRepository
 
+
 class InventoryService:
     def __init__(self, repo: IRepository):
         self.repo = repo
