@@ -84,7 +84,7 @@ jobs:
     - name: Validate terraform
       run: |
         if [ -d "terraform" ]; then
-          cd terraform && terraform fmt -check && terraform validate && tflint
+          cd terraform && terraform init -backend=false && terraform fmt -check && terraform validate && tflint
         fi
       continue-on-error: true
 
