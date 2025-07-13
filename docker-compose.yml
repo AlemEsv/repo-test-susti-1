@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  user:
+    build: ./user-service
+    ports:
+      - "8001:8000"
+  order:
+    build: ./order-service
+    ports:
+      - "8002:8000"
+  inventory:
+    build: ./inventory-service
+    ports:
+      - "8003:8000"
