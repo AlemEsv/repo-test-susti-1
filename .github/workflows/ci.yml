@@ -9,7 +9,7 @@ on:
 jobs:
   calidad-codigo-susti:
     runs-on: ubuntu-latest
-    name: Calidad de código
+    name: Revisar código duplicado
     
     steps:
     # Descargar el código del repositorio
@@ -36,7 +36,7 @@ jobs:
 
   linters:
     runs-on: ubuntu-latest
-    name: Linters
+    name: Verificar sintaxis de código
     needs: calidad-codigo-susti
     
     steps:
