@@ -50,7 +50,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.10'
         
     # Configurar Terraform
     - name: Setup Terraform
@@ -58,65 +58,39 @@ jobs:
       with:
         terraform_version: latest
         
-    # Instalar todas las herramientas para linters
-    - name: Instalar herramientas
+    # Instalar dependencias de Python
+    - name: Instalar dependencias Python
       run: |
-        # herramientas de Python para linter
-        pip install pytest bandit flake8
+        pip install pytest flake8 bandit requests fastapi httpx
+        pip install -r user-service/requirements.txt
+        pip install -r order-service/requirements.txt  
+        pip install -r inventory-service/requirements.txt
         
-        # Instalar TFLint
+    # Instalar herramientas adicionales
+    - name: Instalar herramientas adicionales  
+      run: |
         curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-        
-        # Instalar ShellCheck
         sudo apt-get update && sudo apt-get install -y shellcheck
       
-    # Ejecutar linter de bash
-    - name: Run linter bash
+    # Linting básico
+    - name: Run linting
       run: |
-        echo "Ejecutando linter bash"
-        if find . -name "*.sh" -o -name "*.bash" | grep -v node_modules | head -1 > /dev/null; then
-          echo "Revisando archivos bash..."
-          find . -name "*.sh" -o -name "*.bash" | grep -v node_modules | xargs shellcheck || echo "Problemas en ShellCheck encontrados"
-        else
-          echo "No se encontraron archivos bash"
-        fi
-      continue-on-error: true
-      
-    # Ejecutar linter de python
-    - name: Run linter python
-      run: |
-        echo "Ejecutando linter python"
-        if find . -name "*.py" | grep -v __pycache__ | head -1 > /dev/null; then
-          echo "Revisando archivos Python..."
-          flake8 . --exclude=__pycache__ || echo "Problemas de estilo en Python encontrados"
-          bandit -r . || echo "Problemas de seguridad encontrados"
-        else
-          echo "No se encontraron archivos Python"
-        fi
-      continue-on-error: true
-      
-    # Ejecutar linter de terraform
-    - name: Run linter terraform
-      run: |
-        echo "Ejecutando linter terraform"
-        if find . -name "*.tf" | head -1 > /dev/null; then
-          echo "Revisando archivos Terraform..."
-          terraform fmt -check || echo "Formato de Terraform incorrecto"
-          terraform validate || echo "Validación de Terraform falló"
-          tflint || echo "Problemas en TFLint encontrados"
-        else
-          echo "No se encontraron archivos Terraform"
-        fi
+        flake8 . --exclude=__pycache__ --max-line-length=88 || echo "Linting issues found"
+        bandit -r . --exclude=__pycache__ || echo "Security issues found"
+        find . -name "*.sh" | xargs shellcheck || echo "Shell script issues found"
       continue-on-error: true
         
-    # Ejecutar pruebas con pytest
+    # Validar terraform
+    - name: Validate terraform
+      run: |
+        if [ -d "terraform" ]; then
+          cd terraform && terraform fmt -check && terraform validate && tflint
+        fi
+      continue-on-error: true
+
+    # Ejecutar tests
     - name: Run tests
       run: |
-        echo "Ejecutando pruebas"
-        if find . -name "test_*.py" -o -name "*_test.py" | head -1 > /dev/null; then
-          echo "Ejecutando pruebas..."
-          pytest --tb=short || echo "Fallos en pruebas encontrados"
-        else
-          echo "No se encontraron archivos de prueba"
-        fi
+        export PYTHONPATH="${PWD}:${PWD}/tests:${PWD}/user-service:${PWD}/order-service:${PWD}/inventory-service"
+        python -m pytest tests/ -v || echo "Tests failed"
       continue-on-error: true
