@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   validate-k8s:
     runs-on: ubuntu-latest
@@ -52,7 +56,9 @@ jobs:
 
     - name: Utilizar el github username con minusculas
       id: lowercase
-      run: echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      run: |
+        echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+        echo "repo=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
     - name: Build and push user-service
       uses: docker/build-push-action@v5
@@ -60,8 +66,8 @@ jobs:
         context: user-service
         push: true
         tags: |
-          ghcr.io/${{ steps.lowercase.outputs.owner }}/user-service:latest
-          ghcr.io/${{ steps.lowercase.outputs.owner }}/user-service:${{ github.sha }}
+          ghcr.io/${{ steps.lowercase.outputs.repo }}/user-service:latest
+          ghcr.io/${{ steps.lowercase.outputs.repo }}/user-service:${{ github.sha }}
 
     - name: Build and push order-service
       uses: docker/build-push-action@v5
@@ -69,8 +75,8 @@ jobs:
         context: order-service
         push: true
         tags: |
-          ghcr.io/${{ steps.lowercase.outputs.owner }}/order-service:latest
-          ghcr.io/${{ steps.lowercase.outputs.owner }}/order-service:${{ github.sha }}
+          ghcr.io/${{ steps.lowercase.outputs.repo }}/order-service:latest
+          ghcr.io/${{ steps.lowercase.outputs.repo }}/order-service:${{ github.sha }}
 
     - name: Build and push inventory-service
       uses: docker/build-push-action@v5
@@ -78,5 +84,5 @@ jobs:
         context: inventory-service
         push: true
         tags: |
-          ghcr.io/${{ steps.lowercase.outputs.owner }}/inventory-service:latest
-          ghcr.io/${{ steps.lowercase.outputs.owner }}/inventory-service:${{ github.sha }}
+          ghcr.io/${{ steps.lowercase.outputs.repo }}/inventory-service:latest
+          ghcr.io/${{ steps.lowercase.outputs.repo }}/inventory-service:${{ github.sha }}
