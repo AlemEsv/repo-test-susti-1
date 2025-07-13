@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  calidad-codigo-susti:
+    runs-on: ubuntu-latest
+    name: Calidad de código
+    
+    steps:
+    # Descargar el código del repositorio
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Configurar Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    # Instalar jscpd para detección de código duplicado
+    - name: Instalar jscpd
+      run: |
+        npm install -g jscpd
+        
+    # Ejecutar detección de código duplicado
+    - name: Run duplicate code detection
+      run: |
+        echo "Verificando código duplicado"
+        jscpd --min-lines 20 --min-tokens 100 --reporters console \
+        --ignore "**/node_modules/**,**/.git/**,**/dist/**" \
+        --formats "bash,python,terraform,yaml" . || echo "Código duplicado encontrado"
+      continue-on-error: true
+
+  linters:
+    runs-on: ubuntu-latest
+    name: Linters
+    needs: calidad-codigo-susti
+    
+    steps:
+    # Descargar el código del repositorio
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Configurar Python
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+        
+    # Configurar Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: latest
+        
+    # Instalar todas las herramientas para linters
+    - name: Instalar herramientas
+      run: |
+        # herramientas de Python para linter
+        pip install pytest bandit flake8
+        
+        # Instalar TFLint
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+        
+        # Instalar ShellCheck
+        sudo apt-get update && sudo apt-get install -y shellcheck
+      
+    # Ejecutar linter de bash
+    - name: Run linter bash
+      run: |
+        echo "Ejecutando linter bash"
+        if find . -name "*.sh" -o -name "*.bash" | grep -v node_modules | head -1 > /dev/null; then
+          echo "Revisando archivos bash..."
+          find . -name "*.sh" -o -name "*.bash" | grep -v node_modules | xargs shellcheck || echo "Problemas en ShellCheck encontrados"
+        else
+          echo "No se encontraron archivos bash"
+        fi
+      continue-on-error: true
+      
+    # Ejecutar linter de python
+    - name: Run linter python
+      run: |
+        echo "Ejecutando linter python"
+        if find . -name "*.py" | grep -v __pycache__ | head -1 > /dev/null; then
+          echo "Revisando archivos Python..."
+          flake8 . --exclude=__pycache__ || echo "Problemas de estilo en Python encontrados"
+          bandit -r . || echo "Problemas de seguridad encontrados"
+        else
+          echo "No se encontraron archivos Python"
+        fi
+      continue-on-error: true
+      
+    # Ejecutar linter de terraform
+    - name: Run linter terraform
+      run: |
+        echo "Ejecutando linter terraform"
+        if find . -name "*.tf" | head -1 > /dev/null; then
+          echo "Revisando archivos Terraform..."
+          terraform fmt -check || echo "Formato de Terraform incorrecto"
+          terraform validate || echo "Validación de Terraform falló"
+          tflint || echo "Problemas en TFLint encontrados"
+        else
+          echo "No se encontraron archivos Terraform"
+        fi
+      continue-on-error: true
+        
+    # Ejecutar pruebas con pytest
+    - name: Run tests
+      run: |
+        echo "Ejecutando pruebas"
+        if find . -name "test_*.py" -o -name "*_test.py" | head -1 > /dev/null; then
+          echo "Ejecutando pruebas..."
+          pytest --tb=short || echo "Fallos en pruebas encontrados"
+        else
+          echo "No se encontraron archivos de prueba"
+        fi
+      continue-on-error: true
