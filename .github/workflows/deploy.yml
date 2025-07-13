@@ -50,14 +50,18 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Utilizar el github username con minusculas
+      id: lowercase
+      run: echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
     - name: Build and push user-service
       uses: docker/build-push-action@v5
       with:
         context: user-service
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/user-service:latest
-          ghcr.io/${{ github.repository_owner }}/user-service:${{ github.sha }}
+          ghcr.io/${{ steps.lowercase.outputs.owner }}/user-service:latest
+          ghcr.io/${{ steps.lowercase.outputs.owner }}/user-service:${{ github.sha }}
 
     - name: Build and push order-service
       uses: docker/build-push-action@v5
@@ -65,8 +69,8 @@ jobs:
         context: order-service
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/order-service:latest
-          ghcr.io/${{ github.repository_owner }}/order-service:${{ github.sha }}
+          ghcr.io/${{ steps.lowercase.outputs.owner }}/order-service:latest
+          ghcr.io/${{ steps.lowercase.outputs.owner }}/order-service:${{ github.sha }}
 
     - name: Build and push inventory-service
       uses: docker/build-push-action@v5
@@ -74,5 +78,5 @@ jobs:
         context: inventory-service
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/inventory-service:latest
-          ghcr.io/${{ github.repository_owner }}/inventory-service:${{ github.sha }}
+          ghcr.io/${{ steps.lowercase.outputs.owner }}/inventory-service:latest
+          ghcr.io/${{ steps.lowercase.outputs.owner }}/inventory-service:${{ github.sha }}
