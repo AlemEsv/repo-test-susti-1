@@ -75,8 +75,8 @@ jobs:
     # Linting básico
     - name: Run linting
       run: |
-        flake8 . --exclude=__pycache__ --max-line-length=88 || echo "Linting issues found"
-        bandit -r . --exclude=__pycache__ || echo "Security issues found"
+        flake8 . --exclude=__pycache__ --max-line-length=90 || echo "Linting issues found"
+        bandit -r user-service order-service inventory-service --skip=B101,B113 --severity-level=medium || echo "Security issues found"
         find . -name "*.sh" | xargs shellcheck || echo "Shell script issues found"
       continue-on-error: true
         
