@@ -51,17 +51,17 @@ resource "kubernetes_service" "user_service" {
     name      = "user-service"
     namespace = kubernetes_namespace.app.metadata[0].name
   }
-  
+
   spec {
     selector = {
       app = "user"
     }
-    
+
     port {
       port        = 80
       target_port = 8000
     }
-    
+
     type = "ClusterIP"
   }
 }
