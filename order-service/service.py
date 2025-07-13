@@ -1,5 +1,6 @@
 from interfaces import IRepository
 
+
 class OrderService:
     def __init__(self, repo: IRepository):
         self.repo = repo

@@ -1,10 +1,11 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from unittest.mock import Mock
 from service import OrderService
 from interfaces import IRepository
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 def test_process():
     repo = Mock(spec=IRepository)
