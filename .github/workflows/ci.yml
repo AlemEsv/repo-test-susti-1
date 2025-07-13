@@ -32,8 +32,7 @@ jobs:
       run: |
         echo "Verificando código duplicado"
         jscpd --min-lines 20 --min-tokens 100 --reporters console \
-        --ignore "**/node_modules/**,**/.git/**,**/dist/**" \
-        --formats "bash,python,terraform,yaml" . || echo "Código duplicado encontrado"
+        --ignore "**/node_modules/**,**/.git/**,**/dist/**,**/.venv/**" . || echo "Código duplicado encontrado"
       continue-on-error: true
 
   linters:
@@ -75,9 +74,9 @@ jobs:
     # Linting básico
     - name: Run linting
       run: |
-        flake8 . --exclude=__pycache__ --max-line-length=90 || echo "Linting issues found"
-        bandit -r user-service order-service inventory-service --skip=B101,B113 --severity-level=medium || echo "Security issues found"
-        find . -name "*.sh" | xargs shellcheck || echo "Shell script issues found"
+        flake8 . --exclude=__pycache__ --max-line-length=90 || echo "Errores de sintaxis en python encontrados"
+        bandit -r user-service order-service inventory-service --skip=B101,B113 --severity-level=medium || echo "Errores de seguridad encontrados"
+        find . -name "*.sh" | xargs shellcheck || echo "Errores de sintaxis en bash encontrado"
       continue-on-error: true
         
     # Validar terraform
@@ -86,11 +85,12 @@ jobs:
         if [ -d "terraform" ]; then
           cd terraform && terraform init -backend=false && terraform fmt -check && terraform validate && tflint
         fi
-      continue-on-error: true
 
     # Ejecutar tests
     - name: Run tests
       run: |
-        export PYTHONPATH="${PWD}:${PWD}/tests:${PWD}/user-service:${PWD}/order-service:${PWD}/inventory-service"
-        python -m pytest tests/ -v || echo "Tests failed"
+        # Solo ejecutar tests unitarios que no requieren servicios externos
+        echo "Ejecutando tests unitarios..."
+        python -m pytest user-service/tests/ order-service/tests/ inventory-service/tests/ -v \
+        --tb=short || echo "Las pruebas unitarias fallaron"
       continue-on-error: true

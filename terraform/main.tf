@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.37"
+    }
+  }
+}
+
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
@@ -5,7 +15,7 @@ provider "kubernetes" {
 # Namespace para la aplicación
 resource "kubernetes_namespace" "app" {
   metadata {
-    name = "pedidos"
+    name = var.namespace
   }
 }
 
