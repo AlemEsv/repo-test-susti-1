@@ -15,21 +15,6 @@ spec:
       containers:
         - name: inventory
           image: inventory-service:latest
-          imagePullPolicy: Never  # Para usar imágenes locales en minikube
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
-          env:
-            - name: ENVIRONMENT
-              value: "local"
-          readinessProbe:
-            httpGet:
-              path: /ping
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /ping
-              port: 8000
-            initialDelaySeconds: 15
-            periodSeconds: 20

@@ -1,5 +1,4 @@
 ---
-# User Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,14 +7,12 @@ spec:
   selector:
     app: user
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 8000
-      nodePort: 30001  # Puerto fijo para minikube
+      nodePort: 30001
   type: NodePort
 
 ---
-# Order Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -24,14 +21,12 @@ spec:
   selector:
     app: order
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 8000
-      nodePort: 30002  # Puerto fijo para minikube
+      nodePort: 30002
   type: NodePort
 
 ---
-# Inventory Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -40,8 +35,7 @@ spec:
   selector:
     app: inventory
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 8000
-      nodePort: 30003  # Puerto fijo para minikube
+      nodePort: 30003
   type: NodePort
