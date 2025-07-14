@@ -60,12 +60,6 @@ jobs:
         kubectl get pods -A
         echo "Estado del despliegue verificado"
 
-    - name: Esperar a que los pods estén listos
-      run: |
-        kubectl wait --for=condition=available deployment --all --timeout=300s || echo "Algunos deployments no están disponibles"
-        kubectl get pods -A -o wide
-        echo "Verificación de pods completada"
-
     - name: Verificar conectividad de servicios
       run: |
         kubectl get endpoints -A
