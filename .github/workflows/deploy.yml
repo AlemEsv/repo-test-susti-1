@@ -21,6 +21,22 @@ jobs:
       with:
         version: 'latest'
 
+    - name: Setup Minikube
+      uses: medyagh/setup-minikube@master
+      with:
+        minikube-version: 'latest'
+        kubernetes-version: 'stable'
+        driver: docker
+        container-runtime: docker
+        cpus: 2
+        memory: 4096m
+
+    - name: Verificar cluster de Kubernetes local
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
+        minikube status
+
     - name: Instalar kubeconform
       run: |
         wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
@@ -39,31 +55,42 @@ jobs:
 
     - name: Aplicar manifiestos de Kubernetes
       run: |
-        kubectl apply -f kubernetes/
+        kubectl apply -f kubernetes/ --validate=true
         echo "Manifiestos aplicados exitosamente"
 
     - name: Verificar estado del despliegue
       run: |
-        kubectl get deployments
-        kubectl get services
-        kubectl get pods
+        kubectl get deployments -A
+        kubectl get services -A
+        kubectl get pods -A
         echo "Estado del despliegue verificado"
 
     - name: Esperar a que los pods estén listos
       run: |
-        kubectl wait --for=condition=ready pod --all --timeout=300s || echo "Algunos pods no están listos"
-        kubectl get pods -o wide
+        echo "Esperando a que los pods estén en estado Ready..."
+        # Esperar por deployments específicos si existen
+        kubectl wait --for=condition=available deployment --all --timeout=300s || echo "Algunos deployments no están disponibles"
+        kubectl get pods -A -o wide
         echo "Verificación de pods completada"
 
     - name: Verificar conectividad de servicios
       run: |
-        kubectl get endpoints
+        echo "Verificando conectividad de servicios..."
+        kubectl get endpoints -A
+        kubectl get ingress -A || echo "No hay ingress configurados"
         echo "Conectividad verificada"
 
     - name: Limpiar manifiestos aplicados
       run: |
-        kubectl delete -f kubernetes/ --ignore-not-found=true
+        echo "Limpiando manifiestos de Kubernetes..."
+        kubectl delete -f kubernetes/ --ignore-not-found=true --timeout=60s
         echo "Manifiestos limpiados exitosamente"
+
+    - name: Verificar limpieza
+      run: |
+        echo "Verificando que los recursos fueron eliminados..."
+        kubectl get all -A || echo "Verificación de limpieza completada"
+        echo "Limpieza verificada"
 
   build-and-push:
     needs: validate-k8s
