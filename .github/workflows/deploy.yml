@@ -37,6 +37,34 @@ jobs:
         kubectl apply --dry-run=client -f kubernetes/ || echo "Errores de sintaxis encontrados."
         echo "Sintaxis verificada."
 
+    - name: Aplicar manifiestos de Kubernetes
+      run: |
+        kubectl apply -f kubernetes/
+        echo "Manifiestos aplicados exitosamente"
+
+    - name: Verificar estado del despliegue
+      run: |
+        kubectl get deployments
+        kubectl get services
+        kubectl get pods
+        echo "Estado del despliegue verificado"
+
+    - name: Esperar a que los pods estén listos
+      run: |
+        kubectl wait --for=condition=ready pod --all --timeout=300s || echo "Algunos pods no están listos"
+        kubectl get pods -o wide
+        echo "Verificación de pods completada"
+
+    - name: Verificar conectividad de servicios
+      run: |
+        kubectl get endpoints
+        echo "Conectividad verificada"
+
+    - name: Limpiar manifiestos aplicados
+      run: |
+        kubectl delete -f kubernetes/ --ignore-not-found=true
+        echo "Manifiestos limpiados exitosamente"
+
   build-and-push:
     needs: validate-k8s
     runs-on: ubuntu-latest
@@ -87,3 +115,19 @@ jobs:
         tags: |
           ghcr.io/${{ steps.lowercase.outputs.repo }}/inventory-service:latest
           ghcr.io/${{ steps.lowercase.outputs.repo }}/inventory-service:${{ github.sha }}
+
+  cleanup:
+    needs: [validate-k8s, build-and-push]
+    runs-on: ubuntu-latest
+    name: Limpiar estado del pipeline
+    if: always()  # Se ejecuta siempre, incluso si fallan otros jobs
+    steps:
+    - name: Limpiar cache de Docker
+      run: |
+        docker system prune -af --volumes || true
+
+    - name: Limpiar archivos temporales
+      run: |
+        rm -rf /tmp/* || true
+        rm -rf /var/tmp/* || true
+        echo "Archivos temporales limpiados"
