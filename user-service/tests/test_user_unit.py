@@ -1,11 +1,6 @@
-import sys
-import os
 from unittest.mock import Mock
 from service import UserService
 from interfaces import IUserRepository
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 
 def test_welcome_user():
     mock_repo = Mock(spec=IUserRepository)

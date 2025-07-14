@@ -3,7 +3,6 @@ import pytest
 
 
 class TestSmokeServices:
-    """Tests de humo para verificar que todos los servicios responden"""
 
     def test_user_service_is_alive(self):
         """Verifica que el servicio de usuarios está respondiendo"""
@@ -33,7 +32,6 @@ class TestSmokeServices:
 
 
 class TestSmokeBasicFunctionality:
-    """Tests de humo para funcionalidad básica"""
 
     def test_user_service_basic_response(self):
         """Verifica respuesta básica del servicio de usuarios"""

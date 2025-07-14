@@ -1,49 +1,45 @@
-"""
-End-to-End Tests - Tests que simulan flujos completos de usuario
-Estos tests prueban escenarios reales de uso de la aplicación
-"""
 import requests
 import pytest
 import time
 
 
 class TestE2EUserJourney:
-    """Tests E2E que simulan el viaje completo de un usuario"""
+    """Tests que simulan el viaje completo de un usuario"""
 
     def test_complete_user_order_flow(self):
         """
-        Test E2E: Flujo completo desde bienvenida hasta pedido
+        Flujo completo desde bienvenida hasta pedido
         Simula: Usuario se conecta -> Ve inventario -> Hace pedido
         """
         user_id = "e2e_user_123"
         item_id = "e2e_item_456"
 
-        # Paso 1: Usuario se conecta al sistema
+        # Usuario se conecta al sistema
         response = requests.get(f"http://localhost:8001/welcome/{user_id}")
         assert response.status_code == 200
         welcome_data = response.json()
         assert "Hola" in welcome_data["message"]
 
-        # Paso 2: Usuario consulta inventario
+        # Usuario consulta inventario
         response = requests.get(f"http://localhost:8003/inventory/{item_id}")
         assert response.status_code == 200
         inventory_data = response.json()
         assert "disponible" in inventory_data["stock"]
 
-        # Paso 3: Usuario hace un pedido
+        # Usuario hace un pedido
         response = requests.get(f"http://localhost:8002/action/{item_id}")
         assert response.status_code == 200
         order_data = response.json()
         assert "procesado" in order_data["order"]
 
-        # Verificación final: El flujo se completó correctamente
+        # El flujo se completó correctamente
         assert "Hola" in welcome_data["message"]
         assert "disponible" in inventory_data["stock"]
         assert "procesado" in order_data["order"]
 
     def test_multiple_users_concurrent_access(self):
         """
-        Test E2E: Múltiples usuarios accediendo concurrentemente
+        Múltiples usuarios accediendo concurrentemente
         """
         user_ids = ["user_1", "user_2", "user_3"]
 
@@ -58,7 +54,7 @@ class TestE2EUserJourney:
 
     def test_service_chain_communication(self):
         """
-        Test E2E: Verificar que los servicios pueden comunicarse en cadena
+        Verificar que los servicios pueden comunicarse en cadena
         """
         # Test que simula una comunicación entre todos los servicios
         test_id = "chain_test_789"
@@ -80,7 +76,6 @@ class TestE2EUserJourney:
 
 
 class TestE2EErrorScenarios:
-    """Tests E2E para escenarios de error"""
 
     def test_invalid_user_id_handling(self):
         """Manejo de ID de usuario válido"""
