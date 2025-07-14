@@ -9,19 +9,14 @@ permissions:
   packages: write
 
 jobs:
-  validate-k8s:
+  validate-minikube:
     runs-on: ubuntu-latest
     name: Validar manifiestos
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Setup Minikube
+    - name: Instalar Minikube
       uses: medyagh/setup-minikube@master
       with:
         minikube-version: 'latest'
@@ -67,43 +62,38 @@ jobs:
 
     - name: Esperar a que los pods estén listos
       run: |
-        echo "Esperando a que los pods estén en estado Ready..."
-        # Esperar por deployments específicos si existen
         kubectl wait --for=condition=available deployment --all --timeout=300s || echo "Algunos deployments no están disponibles"
         kubectl get pods -A -o wide
         echo "Verificación de pods completada"
 
     - name: Verificar conectividad de servicios
       run: |
-        echo "Verificando conectividad de servicios..."
         kubectl get endpoints -A
         kubectl get ingress -A || echo "No hay ingress configurados"
         echo "Conectividad verificada"
 
     - name: Limpiar manifiestos aplicados
       run: |
-        echo "Limpiando manifiestos de Kubernetes..."
         kubectl delete -f kubernetes/ --ignore-not-found=true --timeout=60s
         echo "Manifiestos limpiados exitosamente"
 
     - name: Verificar limpieza
       run: |
-        echo "Verificando que los recursos fueron eliminados..."
         kubectl get all -A || echo "Verificación de limpieza completada"
         echo "Limpieza verificada"
 
   build-and-push:
-    needs: validate-k8s
+    needs: validate-minikube
     runs-on: ubuntu-latest
     name: Registrar imagenes usadas
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       
-    - name: Set up Docker Buildx
+    - name: Descargar Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Login to Registry
+    - name: Logging en docker
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
@@ -116,7 +106,7 @@ jobs:
         echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
         echo "repo=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-    - name: Build and push user-service
+    - name: Construir y subir user-service
       uses: docker/build-push-action@v5
       with:
         context: user-service
@@ -125,7 +115,7 @@ jobs:
           ghcr.io/${{ steps.lowercase.outputs.repo }}/user-service:latest
           ghcr.io/${{ steps.lowercase.outputs.repo }}/user-service:${{ github.sha }}
 
-    - name: Build and push order-service
+    - name: Construir y subir order-service
       uses: docker/build-push-action@v5
       with:
         context: order-service
@@ -134,7 +124,7 @@ jobs:
           ghcr.io/${{ steps.lowercase.outputs.repo }}/order-service:latest
           ghcr.io/${{ steps.lowercase.outputs.repo }}/order-service:${{ github.sha }}
 
-    - name: Build and push inventory-service
+    - name: Construir y subir inventory-service
       uses: docker/build-push-action@v5
       with:
         context: inventory-service
@@ -144,10 +134,10 @@ jobs:
           ghcr.io/${{ steps.lowercase.outputs.repo }}/inventory-service:${{ github.sha }}
 
   cleanup:
-    needs: [validate-k8s, build-and-push]
+    needs: [validate-minikube, build-and-push]
     runs-on: ubuntu-latest
     name: Limpiar estado del pipeline
-    if: always()  # Se ejecuta siempre, incluso si fallan otros jobs
+    if: always()
     steps:
     - name: Limpiar cache de Docker
       run: |
