@@ -32,6 +32,12 @@ jobs:
         kubectl get nodes
         minikube status
 
+    - name: Habilitar addons necesarios para Minikube
+      run: |
+        minikube addons enable ingress
+        echo "Addon de ingress habilitado"
+        minikube addons list
+
     - name: Instalar kubeconform
       run: |
         wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
